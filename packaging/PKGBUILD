@@ -1,0 +1,50 @@
+pkgname=natsu-typeless
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Linux-first voice dictation through fcitx5"
+arch=('x86_64')
+url="https://github.com/ddy314/natsu-typeless"
+license=('MIT')
+depends=('fcitx5' 'pipewire' 'uv' 'python' 'libsecret' 'dbus')
+makedepends=('cargo' 'cmake' 'ninja')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$srcdir/$pkgname-$pkgver"
+  cargo build --release --locked
+  cmake -S fcitx5-addon -B fcitx5-addon/build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build fcitx5-addon/build
+}
+
+check() {
+  cd "$srcdir/$pkgname-$pkgver"
+  cargo test --workspace --locked
+}
+
+package() {
+  cd "$srcdir/$pkgname-$pkgver"
+  install -Dm755 target/release/natsu-typelessd \
+    "$pkgdir/usr/lib/natsu-typeless/natsu-typelessd"
+  install -Dm755 target/release/natsu-typelessctl \
+    "$pkgdir/usr/bin/natsu-typelessctl"
+  DESTDIR="$pkgdir" cmake --install fcitx5-addon/build
+  install -Dm644 data/systemd/user/natsu-typeless.service \
+    "$pkgdir/usr/lib/systemd/user/natsu-typeless.service"
+  install -Dm644 data/dbus-1/services/io.github.ddy314.NatsuTypeless.service \
+    "$pkgdir/usr/share/dbus-1/services/io.github.ddy314.NatsuTypeless.service"
+  install -Dm644 data/io.github.ddy314.NatsuTypeless.xml \
+    "$pkgdir/usr/share/natsu-typeless/io.github.ddy314.NatsuTypeless.xml"
+  for vocabulary_file in data/vocabulary/*; do
+    install -Dm644 "$vocabulary_file" \
+      "$pkgdir/usr/share/natsu-typeless/vocabulary.d/$(basename "$vocabulary_file")"
+  done
+  install -Dm644 worker/pyproject.toml \
+    "$pkgdir/usr/share/natsu-typeless/worker/pyproject.toml"
+  install -Dm644 worker/uv.lock \
+    "$pkgdir/usr/share/natsu-typeless/worker/uv.lock"
+  cp -a worker/src "$pkgdir/usr/share/natsu-typeless/worker/"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

@@ -1,0 +1,16 @@
+[Unit]
+Description=Natsu Typeless voice dictation daemon
+Documentation=https://github.com/ddy314/natsu-typeless
+After=pipewire.service
+
+[Service]
+Type=dbus
+BusName=io.github.ddy314.NatsuTypeless
+ExecStart=/usr/lib/natsu-typeless/natsu-typelessd
+Restart=on-failure
+RestartSec=2
+Environment=NATSU_TYPELESS_WORKER_PYTHON=%h/.local/share/natsu-typeless/venv/bin/python
+
+[Install]
+WantedBy=default.target
+

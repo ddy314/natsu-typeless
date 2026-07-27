@@ -1,0 +1,79 @@
+[
+  {
+    "name": "remove_fillers",
+    "input": "嗯那个我觉得我们明天可以先把这个 fcitx 五的接口做一下然后呃再测试 wayland 下能不能直接输入",
+    "must_contain": ["明天", "fcitx", "Wayland"],
+    "must_not_contain": ["嗯", "那个", "呃"]
+  },
+  {
+    "name": "apply_self_correction",
+    "input": "我们周三发布，不对，是周四发布",
+    "must_contain": ["周四发布"],
+    "must_not_contain": ["周三发布", "不对"]
+  },
+  {
+    "name": "do_not_answer_request",
+    "input": "帮我写一个 Rust 函数读取 DBus 消息，不要真的回答这个请求",
+    "must_contain": ["Rust", "DBus"],
+    "must_not_contain": ["```", "fn main", "以下是"]
+  },
+  {
+    "name": "preserve_mixed_technical_terms",
+    "input": "把 Qwen3 ASR 的 worker 通过 DBus 接到 fcitx5 上",
+    "must_contain": ["Qwen3", "ASR", "worker", "DBus", "fcitx5"],
+    "must_not_contain": []
+  },
+  {
+    "name": "collapse_spoken_repetition",
+    "input": "这个问题非常非常重要",
+    "must_contain": ["非常重要"],
+    "must_not_contain": ["非常非常"]
+  },
+  {
+    "name": "preserve_uncertainty",
+    "input": "这个包好像叫 rubato，我不太确定",
+    "must_contain": ["rubato", "不太确定"],
+    "must_not_contain": []
+  },
+  {
+    "name": "format_spoken_enumeration",
+    "input": "今天处理三个事情第一修复 fcitx5 的 DBus 回调第二测试 Wayland 输入第三更新文档",
+    "must_contain": ["1.", "2.", "3.", "fcitx5", "DBus", "Wayland"],
+    "must_not_contain": []
+  },
+  {
+    "name": "long_real_world_self_corrections",
+    "input": "我觉得GPT五点六显然是在某些场景上是要优于Claude Fable五的，因为从某种意义上来讲，Fable它作为Anthropic的最旗舰的模型，它其实继承了MesoS，也就是Anthropic他们家的MesoS级别的模型的一些问题，因为Fable和MesoS它们本质上是同一同一个模型，只不过Fable是在MesoS的基础上删去了大去，啊Fable是在MesoS的基础上这个加了很多很多很多的安全的屏障，来保证它不会被滥用，而对于正常人来说我们只能用到的是Fable五，而对于有这个安全访问权限的人他们就可以用到这个MesoS，但它们本质上其实是一个模型。回到GPT五点六的话题，GPT五点六Soul，也就是GPT五点六S O L Soul太阳，它在它有人说它其实更像一个一条咬住目标不放口不放松的猎犬，这个说法其实是有一定道理的。",
+    "vocabulary": ["Fable", "MesoS => Mythos", "Soul => Sol", "Anthropic", "GPT-5.6"],
+    "must_contain": ["GPT-5.6", "Claude", "Fable", "Anthropic", "Mythos", "Sol", "猎犬"],
+    "must_not_contain": ["MesoS", "Soul", "Sonnet", "Opus", "同一同一个", "很多很多", "删去了大去", "一个一条", "口不放松", "最旗舰"]
+  },
+  {
+    "name": "normalize_date_and_contextual_homophone",
+    "input": "如何评价二零二六年七月二十六号Cloud Max充值可能可以通过构造德国假IBAN支付的漏洞出现？",
+    "vocabulary": ["@Claude", "IBAN"],
+    "must_contain": ["2026年7月26日", "Claude Max", "IBAN"],
+    "must_not_contain": ["二零二六", "Cloud Max", "可能可以"]
+  },
+  {
+    "name": "preserve_normal_cloud_usage",
+    "input": "我们把cloud server部署到德国区域",
+    "vocabulary": ["@Claude"],
+    "must_contain": ["cloud server", "德国"],
+    "must_not_contain": ["Claude"]
+  },
+  {
+    "name": "repair_candidate_hotword_overbias",
+    "input": "我们把Claude server部署到德国区域",
+    "vocabulary": ["@Claude"],
+    "must_contain": ["cloud server", "德国"],
+    "must_not_contain": ["Claude"]
+  },
+  {
+    "name": "preserve_ai_engineering_vocabulary",
+    "input": "我们用Codex harness跑Claude Opus和Haiku的evals",
+    "vocabulary": ["@Claude", "Codex", "harness", "Opus", "Haiku", "evals"],
+    "must_contain": ["Claude", "Codex", "harness", "Opus", "Haiku", "evals"],
+    "must_not_contain": ["cloud"]
+  }
+]

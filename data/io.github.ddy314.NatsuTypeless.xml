@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node>
+  <interface name="io.github.ddy314.NatsuTypeless">
+    <method name="Configure">
+      <arg name="config_json" type="s" direction="in"/>
+    </method>
+    <method name="Begin">
+      <arg name="session_id" type="s" direction="in"/>
+      <arg name="options_json" type="s" direction="in"/>
+    </method>
+    <method name="End">
+      <arg name="session_id" type="s" direction="in"/>
+    </method>
+    <method name="Cancel">
+      <arg name="session_id" type="s" direction="in"/>
+    </method>
+    <method name="GetStatus">
+      <arg name="state" type="s" direction="out"/>
+      <arg name="model_ready" type="b" direction="out"/>
+      <arg name="detail" type="s" direction="out"/>
+    </method>
+    <method name="TakeResult">
+      <arg name="session_id" type="s" direction="in"/>
+      <arg name="text" type="s" direction="out"/>
+      <arg name="used_fallback" type="b" direction="out"/>
+      <arg name="timings_json" type="s" direction="out"/>
+    </method>
+    <signal name="StateChanged">
+      <arg name="session_id" type="s"/>
+      <arg name="state" type="s"/>
+      <arg name="detail" type="s"/>
+    </signal>
+    <signal name="ResultReady">
+      <arg name="session_id" type="s"/>
+    </signal>
+  </interface>
+</node>
+

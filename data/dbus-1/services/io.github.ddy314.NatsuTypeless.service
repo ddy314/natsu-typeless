@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=io.github.ddy314.NatsuTypeless
+Exec=/usr/lib/natsu-typeless/natsu-typelessd
+SystemdService=natsu-typeless.service
+

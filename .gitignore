@@ -8,11 +8,16 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+apikey.md
 
-# Build and dependency outputs
+# Build, dependency, and model outputs
+/target/
+/build/
+/fcitx5-addon/build/
+/worker/.venv/
+/.venv/
+/.cache/
 node_modules/
 dist/
-build/
-target/
 __pycache__/
 *.py[cod]

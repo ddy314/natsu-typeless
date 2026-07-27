@@ -1,0 +1,37 @@
+# AI and software-engineering entity candidates.
+# One canonical spelling per line. These are ASR hotwords, not replacements.
+Anthropic
+Opus
+Sonnet
+Haiku
+OpenAI
+ChatGPT
+Codex
+Gemini
+Qwen
+DeepSeek
+Llama
+Mistral
+Grok
+Copilot
+Cursor
+MCP
+RAG
+LoRA
+RLHF
+DPO
+SFT
+CUDA
+vLLM
+Ollama
+Hugging Face
+Transformers
+PyTorch
+safetensors
+tokenizer
+inference
+benchmark
+context window
+prompt
+harness
+evals
