@@ -1,0 +1,17 @@
+name: Bug report
+description: Report unexpected behavior
+labels: [bug]
+body:
+  - type: textarea
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: How can we reproduce it?
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Linux distribution and version
