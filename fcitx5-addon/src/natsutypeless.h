@@ -21,6 +21,19 @@
 
 namespace natsu_typeless {
 
+struct AsrProviderAnnotation : public fcitx::EnumAnnotation {
+    void dumpDescription(fcitx::RawConfig &config) const {
+        fcitx::EnumAnnotation::dumpDescription(config);
+        config.setValueByPath("Enum/0", "local");
+        config.setValueByPath("EnumI18n/0", "Local Qwen3-ASR");
+        config.setValueByPath("Enum/1", "qwen_api");
+        config.setValueByPath("EnumI18n/1", "Qwen ASR API");
+        config.setValueByPath("Enum/2", "openai_compatible");
+        config.setValueByPath("EnumI18n/2",
+                              "OpenAI-compatible transcription API");
+    }
+};
+
 FCITX_CONFIGURATION(
     NatsuTypelessConfig,
     fcitx::KeyListOption triggerKey{
@@ -36,6 +49,17 @@ FCITX_CONFIGURATION(
     fcitx::Option<std::vector<std::string>> vocabulary{
         this, "Vocabulary",
         "Preferred terms or heard-form => canonical-form corrections", {}};
+    fcitx::OptionWithAnnotation<std::string, AsrProviderAnnotation> asrProvider{
+        this, "AsrProvider", "ASR provider", "local"};
+    fcitx::Option<std::string> asrApiBase{
+        this, "AsrApiBase", "ASR API base URL",
+        "https://dashscope.aliyuncs.com/compatible-mode/v1"};
+    fcitx::Option<std::string> asrModel{
+        this, "AsrModel", "ASR API model ID", "qwen3-asr-flash"};
+    fcitx::Option<bool> asrApiKeyRequired{
+        this, "AsrApiKeyRequired", "Require Bearer API key for ASR", true};
+    fcitx::Option<int> asrTimeoutMs{
+        this, "AsrTimeoutMs", "ASR API timeout in milliseconds", 30000};
     fcitx::Option<bool> cloudEnabled{
         this, "CloudPostprocess", "Use cloud text post-processing", true};
     fcitx::Option<std::string> cloudApiBase{
@@ -52,7 +76,7 @@ FCITX_CONFIGURATION(
     fcitx::Option<int> cloudTimeoutMs{
         this, "CloudTimeoutMs", "Cloud timeout in milliseconds", 4000};
     fcitx::Option<int> modelIdleMinutes{
-        this, "ModelIdleMinutes", "Unload the ASR model after idle minutes", 15};
+        this, "ModelIdleMinutes", "Unload the local ASR model after idle minutes", 15};
     fcitx::Option<int> maxRecordingSeconds{
         this, "MaxRecordingSeconds", "Maximum recording duration", 120};);
 

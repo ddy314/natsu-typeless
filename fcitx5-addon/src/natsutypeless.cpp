@@ -193,10 +193,23 @@ void NatsuTypeless::configureDaemon() {
         return;
     }
     const int timeout = std::clamp(*config_.cloudTimeoutMs, 500, 15000);
+    const int asrTimeout = std::clamp(*config_.asrTimeoutMs, 1000, 120000);
     const int idle = std::clamp(*config_.modelIdleMinutes, 1, 120);
     const int maximum = std::clamp(*config_.maxRecordingSeconds, 5, 300);
+    const auto configuredAsrProvider = *config_.asrProvider;
+    const auto asrProvider =
+        configuredAsrProvider == "qwen_api" ||
+                configuredAsrProvider == "openai_compatible"
+            ? configuredAsrProvider
+            : std::string("local");
     std::ostringstream json;
-    json << "{\"cloud_base_url\":" << jsonString(*config_.cloudApiBase) << ','
+    json << "{\"asr_provider\":" << jsonString(asrProvider) << ','
+         << "\"asr_base_url\":" << jsonString(*config_.asrApiBase) << ','
+         << "\"asr_model\":" << jsonString(*config_.asrModel) << ','
+         << "\"asr_api_key_required\":"
+         << (*config_.asrApiKeyRequired ? "true" : "false") << ','
+         << "\"asr_timeout_ms\":" << asrTimeout << ','
+         << "\"cloud_base_url\":" << jsonString(*config_.cloudApiBase) << ','
          << "\"cloud_model\":" << jsonString(*config_.cloudModel) << ','
          << "\"cloud_api_key_required\":"
          << (*config_.cloudApiKeyRequired ? "true" : "false") << ','

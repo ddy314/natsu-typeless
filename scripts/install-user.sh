@@ -52,9 +52,11 @@ sed "s|/usr/lib/natsu-typeless/natsu-typelessd|${local_bin}/natsu-typelessd|g" \
   > "${dbus_dir}/io.github.ddy314.NatsuTypeless.service"
 
 systemctl --user daemon-reload
-systemctl --user enable --now natsu-typeless.service
+systemctl --user enable natsu-typeless.service
+systemctl --user restart natsu-typeless.service
 
 echo "Installed Natsu Typeless for the current user."
-echo "Next: natsu-typelessctl setup"
-echo "Then: natsu-typelessctl key set"
-echo "Finally restart fcitx5 and configure the Natsu Typeless addon."
+echo "For local ASR: natsu-typelessctl setup"
+echo "For remote ASR: natsu-typelessctl asr-key set"
+echo "For optional text cleanup: natsu-typelessctl key set"
+echo "Finally restart fcitx5 and choose the ASR provider in the addon settings."

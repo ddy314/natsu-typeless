@@ -20,6 +20,7 @@ path = "src/bin/ctl.rs"
 
 [dependencies]
 anyhow.workspace = true
+base64.workspace = true
 clap.workspace = true
 keyring.workspace = true
 libc.workspace = true

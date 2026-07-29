@@ -25,6 +25,10 @@ enum Commands {
         #[command(subcommand)]
         command: KeyCommand,
     },
+    AsrKey {
+        #[command(subcommand)]
+        command: AsrKeyCommand,
+    },
     Model {
         #[command(subcommand)]
         command: ModelCommand,
@@ -33,6 +37,13 @@ enum Commands {
 
 #[derive(Subcommand)]
 enum KeyCommand {
+    Set,
+    Clear,
+    Status,
+}
+
+#[derive(Subcommand)]
+enum AsrKeyCommand {
     Set,
     Clear,
     Status,
@@ -51,8 +62,37 @@ async fn main() -> Result<()> {
         Commands::Doctor => doctor().await,
         Commands::Setup => setup(),
         Commands::Key { command } => key(command),
+        Commands::AsrKey { command } => asr_key(command),
         Commands::Model { command } => model(command),
     }
+}
+
+fn asr_key(command: AsrKeyCommand) -> Result<()> {
+    match command {
+        AsrKeyCommand::Set => {
+            let value = rpassword::prompt_password("ASR API key: ")?;
+            if value.trim().is_empty() {
+                bail!("key was empty");
+            }
+            secrets::set_asr_api_key(&value)?;
+            println!("ASR API key stored in Secret Service.");
+        }
+        AsrKeyCommand::Clear => {
+            secrets::clear_asr_api_key()?;
+            println!("ASR API key removed.");
+        }
+        AsrKeyCommand::Status => {
+            println!(
+                "ASR API key: {}",
+                if secrets::has_asr_api_key() {
+                    "configured"
+                } else {
+                    "missing"
+                }
+            );
+        }
+    }
+    Ok(())
 }
 
 fn key(command: KeyCommand) -> Result<()> {
@@ -151,7 +191,7 @@ async fn print_status() -> Result<()> {
     let proxy = Proxy::new(&connection, BUS_NAME, OBJECT_PATH, INTERFACE_NAME).await?;
     let (state, ready, detail): (String, bool, String) = proxy.call("GetStatus", &()).await?;
     println!("state: {state}");
-    println!("model ready: {ready}");
+    println!("ASR ready: {ready}");
     if !detail.is_empty() {
         println!("detail: {detail}");
     }
@@ -175,6 +215,14 @@ async fn doctor() -> Result<()> {
     if !secrets::has_cloud_api_key() {
         failed = true;
     }
+    println!(
+        "[{}] ASR API key (only required for remote ASR)",
+        if secrets::has_asr_api_key() {
+            "ok"
+        } else {
+            "optional"
+        }
+    );
     match print_status().await {
         Ok(()) => println!("[ok] daemon DBus"),
         Err(error) => {

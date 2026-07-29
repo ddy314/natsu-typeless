@@ -51,9 +51,9 @@ impl TypelessService {
             .await
             .map_err(failed)?;
 
-        let worker = Arc::clone(self.pipeline.worker());
+        let pipeline = Arc::clone(&self.pipeline);
         tokio::spawn(async move {
-            if let Err(error) = worker.warm().await {
+            if let Err(error) = pipeline.prewarm_asr().await {
                 tracing::warn!(error = %error, "ASR prewarm failed; finish will retry");
             }
         });

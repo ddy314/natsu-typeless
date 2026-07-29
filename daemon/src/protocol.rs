@@ -3,6 +3,17 @@ use serde::{Deserialize, Serialize};
 pub const PROTOCOL_VERSION: u32 = 1;
 pub const DEFAULT_CLOUD_BASE_URL: &str = "https://generativelanguage.googleapis.com/v1beta/openai";
 pub const DEFAULT_CLOUD_MODEL: &str = "gemini-3.5-flash-lite";
+pub const DEFAULT_ASR_BASE_URL: &str = "https://dashscope.aliyuncs.com/compatible-mode/v1";
+pub const DEFAULT_ASR_MODEL: &str = "qwen3-asr-flash";
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AsrProvider {
+    #[default]
+    Local,
+    QwenApi,
+    OpenaiCompatible,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -55,6 +66,11 @@ impl Default for SessionOptions {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct RuntimeConfig {
+    pub asr_provider: AsrProvider,
+    pub asr_base_url: String,
+    pub asr_model: String,
+    pub asr_api_key_required: bool,
+    pub asr_timeout_ms: u64,
     pub cloud_base_url: String,
     pub cloud_model: String,
     pub cloud_api_key_required: bool,
@@ -66,6 +82,11 @@ pub struct RuntimeConfig {
 impl Default for RuntimeConfig {
     fn default() -> Self {
         Self {
+            asr_provider: AsrProvider::Local,
+            asr_base_url: DEFAULT_ASR_BASE_URL.into(),
+            asr_model: DEFAULT_ASR_MODEL.into(),
+            asr_api_key_required: true,
+            asr_timeout_ms: 30_000,
             cloud_base_url: DEFAULT_CLOUD_BASE_URL.into(),
             cloud_model: DEFAULT_CLOUD_MODEL.into(),
             cloud_api_key_required: true,

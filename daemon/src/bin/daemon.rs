@@ -1,5 +1,7 @@
 use anyhow::Result;
-use natsu_typeless::{config::ProcessConfig, dbus, pipeline::Pipeline, worker::WorkerManager};
+use natsu_typeless::{
+    asr::AsrRouter, config::ProcessConfig, dbus, pipeline::Pipeline, worker::WorkerManager,
+};
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
@@ -15,18 +17,11 @@ async fn main() -> Result<()> {
 
     let process_config = ProcessConfig::default();
     let worker = WorkerManager::new(process_config.clone());
-    let pipeline = Pipeline::new(process_config.runtime.clone(), worker.clone())?;
+    let asr = AsrRouter::new(worker)?;
+    let pipeline = Pipeline::new(process_config.runtime.clone(), asr)?;
     let _connection = dbus::serve(pipeline).await?;
 
-    tokio::spawn(async move {
-        if let Err(error) = worker.warm().await {
-            tracing::warn!(error = %error, "initial ASR model prewarm failed");
-        } else {
-            worker.schedule_idle_unload();
-        }
-    });
-
-    tracing::info!("Natsu Typeless daemon is ready");
+    tracing::info!("Natsu Typeless daemon is ready; ASR loads on first use");
     tokio::signal::ctrl_c().await?;
     Ok(())
 }

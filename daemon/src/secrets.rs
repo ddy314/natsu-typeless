@@ -3,6 +3,7 @@ use anyhow::{Context, Result};
 const SERVICE: &str = "io.github.ddy314.NatsuTypeless";
 const ACCOUNT: &str = "openai-compatible-api-key";
 const LEGACY_ACCOUNT: &str = "gemini-api-key";
+const ASR_ACCOUNT: &str = "asr-api-key";
 
 fn entry(account: &str) -> Result<keyring::Entry> {
     keyring::Entry::new(SERVICE, account).context("initialize Secret Service entry")
@@ -42,4 +43,35 @@ pub fn clear_cloud_api_key() -> Result<()> {
 
 pub fn has_cloud_api_key() -> bool {
     get_cloud_api_key().is_ok()
+}
+
+pub fn get_asr_api_key() -> Result<String> {
+    for variable in ["NATSU_TYPELESS_ASR_API_KEY", "DASHSCOPE_API_KEY"] {
+        let Ok(value) = std::env::var(variable) else {
+            continue;
+        };
+        if !value.trim().is_empty() {
+            return Ok(value);
+        }
+    }
+    entry(ASR_ACCOUNT)?
+        .get_password()
+        .context("ASR API key is not configured; run `natsu-typelessctl asr-key set`")
+}
+
+pub fn set_asr_api_key(value: &str) -> Result<()> {
+    entry(ASR_ACCOUNT)?
+        .set_password(value.trim())
+        .context("store ASR API key in Secret Service")
+}
+
+pub fn clear_asr_api_key() -> Result<()> {
+    if let Ok(entry) = entry(ASR_ACCOUNT) {
+        let _ = entry.delete_credential();
+    }
+    Ok(())
+}
+
+pub fn has_asr_api_key() -> bool {
+    get_asr_api_key().is_ok()
 }

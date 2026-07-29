@@ -16,7 +16,7 @@
     </method>
     <method name="GetStatus">
       <arg name="state" type="s" direction="out"/>
-      <arg name="model_ready" type="b" direction="out"/>
+      <arg name="asr_ready" type="b" direction="out"/>
       <arg name="detail" type="s" direction="out"/>
     </method>
     <method name="TakeResult">
@@ -35,4 +35,3 @@
     </signal>
   </interface>
 </node>
-

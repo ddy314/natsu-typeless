@@ -8,16 +8,16 @@ use anyhow::{Context, Result, bail};
 use tokio::sync::{Mutex, RwLock};
 
 use crate::{
+    asr::AsrRouter,
     audio::Recording,
     openai_compat::OpenAiCompatClient,
     prompt::polished_output_rejection,
     protocol::{
-        DEFAULT_CLOUD_BASE_URL, DEFAULT_CLOUD_MODEL, FinalResult, PipelineState, RuntimeConfig,
-        SessionOptions, TranscriptResult,
+        DEFAULT_ASR_BASE_URL, DEFAULT_ASR_MODEL, DEFAULT_CLOUD_BASE_URL, DEFAULT_CLOUD_MODEL,
+        FinalResult, PipelineState, RuntimeConfig, SessionOptions, TranscriptResult,
     },
     secrets,
     vocabulary::{load_domain_vocabulary, merge_vocabulary, resolve_contextual_entities},
-    worker::WorkerManager,
 };
 
 pub struct ProcessingSession {
@@ -54,12 +54,12 @@ struct Inner {
 pub struct Pipeline {
     inner: Mutex<Inner>,
     runtime: RwLock<RuntimeConfig>,
-    worker: Arc<WorkerManager>,
+    asr: AsrRouter,
     cloud: OpenAiCompatClient,
 }
 
 impl Pipeline {
-    pub fn new(runtime: RuntimeConfig, worker: Arc<WorkerManager>) -> Result<Arc<Self>> {
+    pub fn new(runtime: RuntimeConfig, asr: AsrRouter) -> Result<Arc<Self>> {
         Ok(Arc::new(Self {
             inner: Mutex::new(Inner {
                 state: PipelineState::Idle,
@@ -70,23 +70,27 @@ impl Pipeline {
                 results: HashMap::new(),
             }),
             runtime: RwLock::new(runtime),
-            worker,
+            asr,
             cloud: OpenAiCompatClient::new()?,
         }))
     }
 
-    pub fn worker(&self) -> &Arc<WorkerManager> {
-        &self.worker
-    }
-
     pub async fn configure(&self, mut runtime: RuntimeConfig) {
+        runtime.asr_base_url = normalize_base_url(&runtime.asr_base_url, DEFAULT_ASR_BASE_URL);
+        runtime.asr_model = normalize_model(&runtime.asr_model, DEFAULT_ASR_MODEL);
+        runtime.asr_timeout_ms = runtime.asr_timeout_ms.clamp(1_000, 120_000);
         runtime.cloud_base_url = normalize_cloud_base_url(&runtime.cloud_base_url);
         runtime.cloud_model = normalize_cloud_model(&runtime.cloud_model);
         runtime.cloud_timeout_ms = runtime.cloud_timeout_ms.clamp(500, 15_000);
         runtime.model_idle_minutes = runtime.model_idle_minutes.clamp(1, 120);
         runtime.max_recording_seconds = runtime.max_recording_seconds.clamp(5, 300);
-        self.worker.set_idle_minutes(runtime.model_idle_minutes);
+        self.asr.configure(&runtime).await;
         *self.runtime.write().await = runtime;
+    }
+
+    pub async fn prewarm_asr(&self) -> Result<()> {
+        let runtime = self.runtime.read().await.clone();
+        self.asr.prewarm(&runtime).await
     }
 
     pub async fn begin(
@@ -178,9 +182,11 @@ impl Pipeline {
         self: &Arc<Self>,
         session: &ProcessingSession,
     ) -> Result<TranscriptResult> {
+        let runtime = self.runtime.read().await.clone();
         let result = self
-            .worker
+            .asr
             .transcribe(
+                &runtime,
                 &session.id,
                 &session.pcm,
                 &session.options.language,
@@ -378,7 +384,11 @@ impl Pipeline {
 
     pub async fn status(&self) -> (PipelineState, bool, String) {
         let inner = self.inner.lock().await;
-        (inner.state, self.worker.is_ready(), inner.detail.clone())
+        let state = inner.state;
+        let detail = inner.detail.clone();
+        drop(inner);
+        let runtime = self.runtime.read().await.clone();
+        (state, self.asr.is_ready(&runtime).await, detail)
     }
 
     async fn fail_if_current(self: &Arc<Self>, session_id: &str, detail: String) {
@@ -424,18 +434,26 @@ fn tail_chars(value: &str, count: usize) -> String {
 }
 
 fn normalize_cloud_model(value: &str) -> String {
+    normalize_model(value, DEFAULT_CLOUD_MODEL)
+}
+
+fn normalize_model(value: &str, default: &str) -> String {
     let value = value.trim();
     if !value.is_empty() && value.len() <= 256 && !value.chars().any(char::is_control) {
         value.to_owned()
     } else {
-        DEFAULT_CLOUD_MODEL.to_owned()
+        default.to_owned()
     }
 }
 
 fn normalize_cloud_base_url(value: &str) -> String {
+    normalize_base_url(value, DEFAULT_CLOUD_BASE_URL)
+}
+
+fn normalize_base_url(value: &str, default: &str) -> String {
     let value = value.trim().trim_end_matches('/');
     let Ok(url) = reqwest::Url::parse(value) else {
-        return DEFAULT_CLOUD_BASE_URL.to_owned();
+        return default.to_owned();
     };
     if matches!(url.scheme(), "http" | "https")
         && url.username().is_empty()
@@ -445,7 +463,7 @@ fn normalize_cloud_base_url(value: &str) -> String {
     {
         value.to_owned()
     } else {
-        DEFAULT_CLOUD_BASE_URL.to_owned()
+        default.to_owned()
     }
 }
 
